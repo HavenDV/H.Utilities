@@ -4,8 +4,4 @@
     <TargetFrameworks>net5.0;net4.8</TargetFrameworks>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\libs\H.Utilities\H.Utilities.csproj" />
-  </ItemGroup>
-
 </Project>
