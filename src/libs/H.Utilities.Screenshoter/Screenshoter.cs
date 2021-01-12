@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace H.Utilities
@@ -11,7 +12,8 @@ namespace H.Utilities
     /// </summary>
     public static class Screenshoter
     {
-        // P/Invoke declarations
+        #region PInvokes
+
         [DllImport("gdi32.dll")]
         private static extern bool BitBlt(IntPtr hdcDest, int xDest, int yDest, int
             wDest, int hDest, IntPtr hdcSource, int xSrc, int ySrc, CopyPixelOperation rop);
@@ -47,86 +49,108 @@ namespace H.Utilities
         [DllImport("user32.dll")]
         private static extern int GetSystemMetrics(SystemMetric metric);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public static Rectangle GetVirtualDisplayRectangle()
-        {
-            var x = (int)Math.Round(ConvertPixel(GetSystemMetrics(SystemMetric.VirtualScreenX)));
-            var y = (int)Math.Round(ConvertPixel(GetSystemMetrics(SystemMetric.VirtualScreenY)));
-            var width = (int)Math.Round(ConvertPixel(GetSystemMetrics(SystemMetric.VirtualScreenWidth)));
-            var height = (int)Math.Round(ConvertPixel(GetSystemMetrics(SystemMetric.VirtualScreenHeight)));
-
-            return new Rectangle(x, y, width, height);
-        }
-
         [DllImport("gdi32.dll")]
         internal static extern int GetDeviceCaps(IntPtr hdc, int nIndex);
 
+        #endregion
+
+        #region DPI
+
         private static int? _dpi;
-        private static readonly object _dpiLock = new object();
+        // ReSharper disable once InconsistentNaming
+        private static readonly object _dpiLock = new();
 
         internal static int Dpi {
             get {
-                if (!_dpi.HasValue)
+                if (_dpi.HasValue)
                 {
-                    lock (_dpiLock)
-                    {
-                        if (!_dpi.HasValue)
-                        {
-                            var dc = GetDC(IntPtr.Zero);
-                            if (dc == IntPtr.Zero)
-                            {
-                                throw new Win32Exception();
-                            }
-
-                            try
-                            {
-                                _dpi = GetDeviceCaps(dc, 90);
-                            }
-                            finally
-                            {
-                                ReleaseDC(IntPtr.Zero, dc);
-                            }
-                        }
-                    }
+                    return _dpi.Value;
                 }
 
-                return _dpi.Value;
+                lock (_dpiLock)
+                {
+                    if (_dpi.HasValue)
+                    {
+                        return _dpi.Value;
+                    }
+
+                    var dc = GetDC(IntPtr.Zero);
+                    if (dc == IntPtr.Zero)
+                    {
+                        throw new Win32Exception(Marshal.GetLastWin32Error());
+                    }
+
+                    try
+                    {
+                        _dpi = GetDeviceCaps(dc, 90);
+
+                        return _dpi.Value;
+                    }
+                    finally
+                    {
+                        ReleaseDC(IntPtr.Zero, dc);
+                    }
+                }
             }
         }
 
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="dpi"></param>
         /// <param name="pixel"></param>
         /// <returns></returns>
-        public static double ConvertPixel(double pixel)
+        private static double ConvertPixel(int dpi, double pixel)
         {
-            var dpi = Dpi;
-
-            return dpi != 0 
-                ? pixel * 96.0 / dpi 
+            return dpi != 0
+                ? pixel * 96.0 / dpi
                 : pixel;
         }
 
+        #endregion
+
+        #region Public methods
+
         /// <summary>
-        /// Required to Dispose after usage
+        /// Returns rectangle of VirtualDisplay. X and Y can be negative.
         /// </summary>
         /// <returns></returns>
-        public static (Rectangle rectangle, Image image) ShotVirtualDisplay()
+        public static Rectangle GetVirtualDisplayRectangle()
         {
-            var rectangle = GetVirtualDisplayRectangle();
+            var dpi = Dpi;
+            var x = (int)Math.Round(ConvertPixel(dpi, GetSystemMetrics(SystemMetric.VirtualScreenX)));
+            var y = (int)Math.Round(ConvertPixel(dpi, GetSystemMetrics(SystemMetric.VirtualScreenY)));
+            var width = (int)Math.Round(ConvertPixel(dpi, GetSystemMetrics(SystemMetric.VirtualScreenWidth)));
+            var height = (int)Math.Round(ConvertPixel(dpi, GetSystemMetrics(SystemMetric.VirtualScreenHeight)));
+
+            return new Rectangle(x, y, width, height);
+        }
+
+        /// <summary>
+        /// Creates screenshot of all available screens. <br/>
+        /// If <paramref name="rectangle"/> is not null, returns image of this region.
+        /// </summary>
+        /// <returns></returns>
+        public static Bitmap Shot(Rectangle? rectangle = null)
+        {
+            var displayRectangle = GetVirtualDisplayRectangle();
 
             var window = GetDesktopWindow();
             var dc = GetWindowDC(window);
             var toDc = CreateCompatibleDC(dc);
-            var hBmp = CreateCompatibleBitmap(dc, rectangle.Width, rectangle.Height);
+            var hBmp = CreateCompatibleBitmap(dc, displayRectangle.Width, displayRectangle.Height);
             var hOldBmp = SelectObject(toDc, hBmp);
 
             // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
-            BitBlt(toDc, 0, 0, rectangle.Width, rectangle.Height, dc, rectangle.X, rectangle.Y, CopyPixelOperation.CaptureBlt | CopyPixelOperation.SourceCopy); //-V3059
+            BitBlt(toDc, 
+                0, 
+                0, 
+                displayRectangle.Width, 
+                displayRectangle.Height, 
+                dc, 
+                displayRectangle.X, 
+                displayRectangle.Y, 
+                CopyPixelOperation.CaptureBlt | CopyPixelOperation.SourceCopy);
 
             var bitmap = Image.FromHbitmap(hBmp);
             SelectObject(toDc, hOldBmp);
@@ -134,32 +158,31 @@ namespace H.Utilities
             DeleteDC(toDc);
             ReleaseDC(window, dc);
 
-            return (rectangle, bitmap);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public static async Task<Image> ShotVirtualDisplayAsync() => (await Task.Run(ShotVirtualDisplay).ConfigureAwait(false)).image;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="rectangle"></param>
-        /// <returns></returns>
-        public static async Task<Image> ShotVirtualDisplayRectangleAsync(Rectangle rectangle)
-        {
-            var (displayRectangle, image) = await Task.Run(ShotVirtualDisplay).ConfigureAwait(false);
-
-            rectangle.X -= displayRectangle.X;
-            rectangle.Y -= displayRectangle.Y;
-
-            using (image)
-            using (var bitmap = new Bitmap(image))
+            if (rectangle == null)
             {
-                return bitmap.Clone(rectangle, bitmap.PixelFormat);
+                return bitmap;
+            }
+
+            var fixedRectangle = rectangle.Value;
+            fixedRectangle.X -= displayRectangle.X;
+            fixedRectangle.Y -= displayRectangle.Y;
+
+            using (bitmap)
+            {
+                return bitmap.Clone(fixedRectangle, bitmap.PixelFormat);
             }
         }
+
+        /// <summary>
+        /// Calls <seealso cref="Task.Run(Action, CancellationToken)"/> for <seealso cref="Shot"/>.
+        /// </summary>
+        /// <returns></returns>
+        public static async Task<Bitmap> ShotAsync(Rectangle? rectangle = null, CancellationToken cancellationToken = default)
+        {
+            return await Task.Run(() => Shot(rectangle), cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        #endregion
     }
 }
