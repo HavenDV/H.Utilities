@@ -26,7 +26,7 @@ namespace H.Utilities
             {
                 if (key == null)
                 {
-                    throw new Exception($"Cannot open/create reg key: {KeyName}");
+                    throw new InvalidOperationException($"Cannot open/create reg key: {KeyName}");
                 }
 
                 if (autoStart)
@@ -85,7 +85,7 @@ namespace H.Utilities
             var name = Path.GetFileNameWithoutExtension(fileName);
             if (name == null)
             {
-                throw new Exception("File name is not correct");
+                throw new ArgumentException("File name is not correct");
             }
 
             return name;

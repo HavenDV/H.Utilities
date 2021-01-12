@@ -12,6 +12,10 @@
     <PackageReleaseNotes></PackageReleaseNotes>
   </PropertyGroup>
 
+  <PropertyGroup Label="Analyzers">
+    <NoWarn>$(NoWarn);3009;CA1002;CA1508</NoWarn>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="H.Core" Version="0.14.9" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
