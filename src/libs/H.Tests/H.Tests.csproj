@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net4.5;net4.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup Label="NuGet">
+    <Version>1.0.0</Version>
+    <PackageReleaseNotes></PackageReleaseNotes>
+    <Description>Contains tests utilities:
+Classes:
+- TempDirectory
+
+Utilities:
+- ResourcesUtilities
+
+Extensions:
+- LoggingExtensions
+ - object.WithEventLogging()
+    </Description>
+    <PackageTags>io, tempdirectory, resources, logging</PackageTags>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Analyzers">
+    <NoWarn>$(NoWarn);CA5394</NoWarn>
+  </PropertyGroup>
+
+</Project>
