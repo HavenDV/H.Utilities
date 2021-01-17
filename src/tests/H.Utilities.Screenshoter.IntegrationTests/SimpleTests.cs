@@ -67,5 +67,19 @@ namespace H.Utilities.IntegrationTests
                 UseShellExecute = true,
             });
         }
+
+        [TestMethod]
+        public void InverseRectangleShotTest()
+        {
+            var image = Screenshoter.Shot(Rectangle.FromLTRB(5278, 1426, 4509, 808));
+            var path = $"{Path.GetTempFileName()}.bmp";
+
+            image.Save(path);
+
+            Process.Start(new ProcessStartInfo(path)
+            {
+                UseShellExecute = true,
+            });
+        }
     }
 }

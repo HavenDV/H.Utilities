@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using H.Utilities.Extensions;
 using PInvoke;
 
 namespace H.Utilities
@@ -85,8 +86,8 @@ namespace H.Utilities
         /// <returns></returns>
         public static Image Shot(Rectangle? cropRectangle = null)
         {
-            var rectangle = cropRectangle ?? GetVirtualDisplayRectangle();
-
+            var rectangle = (cropRectangle ?? GetVirtualDisplayRectangle()).Normalize();
+            
             var window = User32.GetDesktopWindow();
             using var dc = User32.GetWindowDC(window);
             using var toDc = Gdi32.CreateCompatibleDC(dc);
