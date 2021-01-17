@@ -14,44 +14,10 @@ namespace H.Utilities
     {
         #region PInvokes
 
-        [DllImport("gdi32.dll")]
-        private static extern bool BitBlt(IntPtr hdcDest, int xDest, int yDest, int
-            wDest, int hDest, IntPtr hdcSource, int xSrc, int ySrc, CopyPixelOperation rop);
-        [DllImport("gdi32.dll")]
-        private static extern IntPtr DeleteDC(IntPtr hDc);
-        [DllImport("gdi32.dll")]
-        private static extern IntPtr DeleteObject(IntPtr hDc);
-        [DllImport("gdi32.dll")]
-        private static extern IntPtr CreateCompatibleBitmap(IntPtr hdc, int nWidth, int nHeight);
-        [DllImport("gdi32.dll")]
-        private static extern IntPtr CreateCompatibleDC(IntPtr hdc);
-        [DllImport("gdi32.dll")]
-        private static extern IntPtr SelectObject(IntPtr hdc, IntPtr bmp);
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetDesktopWindow();
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetWindowDC(IntPtr ptr);
-
-        [DllImport("user32.dll", ExactSpelling = true)]
-        internal static extern int ReleaseDC(IntPtr hWnd, IntPtr hDc);
-
-        #endregion
-
-        #region DPI
-
         [DllImport("user32", CharSet = CharSet.Unicode)]
         private static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lpRect, MonitorEnumProc callback, int dwData);
         
-        private delegate bool MonitorEnumProc(IntPtr hDesktop, IntPtr hdc, ref Rect pRect, IntPtr dwData);
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct Rect
-        {
-            public int left;
-            public int top;
-            public int right;
-            public int bottom;
-        }
+        private delegate bool MonitorEnumProc(IntPtr hDesktop, IntPtr hdc, ref RECT pRect, IntPtr dwData);
 
         [DllImport("User32.dll", CharSet = CharSet.Auto)]
         internal static extern bool GetMonitorInfo(IntPtr hmonitor, [In, Out] MonitorInfoEx info);
@@ -81,15 +47,16 @@ namespace H.Utilities
             var right = 0.0;
             var top = 0.0;
             var bottom = 0.0;
-            MonitorEnumProc callback = (IntPtr hDesktop, IntPtr _, ref Rect _, IntPtr _) =>
+
+            bool Callback(IntPtr hDesktop, IntPtr intPtr, ref RECT rect, IntPtr intPtr1)
             {
                 var info = new MonitorInfoEx();
                 GetMonitorInfo(hDesktop, info);
-                
+
                 var settings = new DEVMODE();
                 User32.EnumDisplaySettings(
-                    info.szDevice,
-                    User32.ENUM_CURRENT_SETTINGS,
+                    info.szDevice, 
+                    User32.ENUM_CURRENT_SETTINGS, 
                     ref settings);
 
                 var x = settings.dmPosition.x;
@@ -103,8 +70,9 @@ namespace H.Utilities
                 bottom = Math.Max(bottom, y + height);
 
                 return true;
-            };
-            EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, callback, 0);
+            }
+
+            EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, Callback, 0);
 
             return Rectangle.FromLTRB((int)left, (int)top, (int)right, (int)bottom);
         }
@@ -118,42 +86,30 @@ namespace H.Utilities
         {
             var displayRectangle = GetVirtualDisplayRectangle();
 
-            var window = GetDesktopWindow();
-            var dc = GetWindowDC(window);
-            var toDc = CreateCompatibleDC(dc);
-            var hBmp = CreateCompatibleBitmap(dc, displayRectangle.Width, displayRectangle.Height);
-            var hOldBmp = SelectObject(toDc, hBmp);
+            var window = User32.GetDesktopWindow();
+            using var dc = User32.GetWindowDC(window);
+            using var toDc = Gdi32.CreateCompatibleDC(dc);
+            var hBmp = Gdi32.CreateCompatibleBitmap(dc, displayRectangle.Width, displayRectangle.Height);
+            var hOldBmp = Gdi32.SelectObject(toDc, hBmp);
 
             // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
-            BitBlt(toDc, 
+            Gdi32.BitBlt(toDc.DangerousGetHandle(), 
                 0, 
                 0, 
                 displayRectangle.Width, 
                 displayRectangle.Height, 
-                dc, 
+                dc.DangerousGetHandle(), 
                 displayRectangle.X, 
                 displayRectangle.Y, 
-                CopyPixelOperation.CaptureBlt | CopyPixelOperation.SourceCopy);
+                (int)(CopyPixelOperation.CaptureBlt | CopyPixelOperation.SourceCopy));
 
             var bitmap = Image.FromHbitmap(hBmp);
-            SelectObject(toDc, hOldBmp);
-            DeleteObject(hBmp);
-            DeleteDC(toDc);
-            ReleaseDC(window, dc);
+            Gdi32.SelectObject(toDc, hOldBmp);
+            Gdi32.DeleteObject(hBmp);
+            Gdi32.DeleteDC(toDc); //?
+            User32.ReleaseDC(window, dc.DangerousGetHandle()); //?
 
-            if (rectangle == null)
-            {
-                return bitmap;
-            }
-
-            var fixedRectangle = rectangle.Value;
-            fixedRectangle.X -= displayRectangle.X;
-            fixedRectangle.Y -= displayRectangle.Y;
-
-            using (bitmap)
-            {
-                return bitmap.Clone(fixedRectangle, bitmap.PixelFormat);
-            }
+            return bitmap;
         }
 
         /// <summary>

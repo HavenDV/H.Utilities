@@ -29,7 +29,6 @@
 
   <ItemGroup>
     <PackageReference Include="PInvoke.Gdi32" Version="0.7.78" />
-    <PackageReference Include="PInvoke.SHCore" Version="0.7.78" />
     <PackageReference Include="PInvoke.User32" Version="0.7.78" />
   </ItemGroup>
 
