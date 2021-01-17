@@ -6,9 +6,12 @@
   </PropertyGroup>
 
   <PropertyGroup Label="NuGet">
-    <Version>0.9.1</Version>
+    <Version>1.0.0</Version>
     <PackageReleaseNotes></PackageReleaseNotes>
-    <Description>Allows you to screenshot a screen or a portion of the screen.</Description>
+    <Description>Allows you to screenshot a screen or a portion of the screen. Features:
+- Supports multiple displays with different scale.
+- Thread-safe.
+    </Description>
     <PackageTags>screenshot</PackageTags>
   </PropertyGroup>
 

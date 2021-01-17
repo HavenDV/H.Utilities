@@ -32,9 +32,6 @@ namespace H.Utilities
         [DllImport("user32.dll")]
         private static extern IntPtr GetWindowDC(IntPtr ptr);
 
-        [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)]
-        internal static extern IntPtr GetDC(IntPtr hWnd);
-
         [DllImport("user32.dll", ExactSpelling = true)]
         internal static extern int ReleaseDC(IntPtr hWnd, IntPtr hDc);
 
@@ -42,10 +39,10 @@ namespace H.Utilities
 
         #region DPI
 
-        [DllImport("user32")]
+        [DllImport("user32", CharSet = CharSet.Unicode)]
         private static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lpRect, MonitorEnumProc callback, int dwData);
         
-        private delegate bool MonitorEnumProc(IntPtr hDesktop, IntPtr hdc, ref Rect pRect, int dwData);
+        private delegate bool MonitorEnumProc(IntPtr hDesktop, IntPtr hdc, ref Rect pRect, IntPtr dwData);
 
         [StructLayout(LayoutKind.Sequential)]
         private struct Rect
@@ -54,6 +51,20 @@ namespace H.Utilities
             public int top;
             public int right;
             public int bottom;
+        }
+
+        [DllImport("User32.dll", CharSet = CharSet.Auto)]
+        internal static extern bool GetMonitorInfo(IntPtr hmonitor, [In, Out] MonitorInfoEx info);
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto, Pack = 4)]
+        internal class MonitorInfoEx
+        {
+            public int cbSize = Marshal.SizeOf(typeof(MonitorInfoEx));
+            public RECT rcMonitor;
+            public RECT rcWork;
+            public int dwFlags;
+            [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
+            public char[] szDevice = new char[32];
         }
 
         #endregion
@@ -70,20 +81,29 @@ namespace H.Utilities
             var right = 0.0;
             var top = 0.0;
             var bottom = 0.0;
-            MonitorEnumProc callback = (IntPtr hDesktop, IntPtr hdc, ref Rect prect, int d) =>
+            MonitorEnumProc callback = (IntPtr hDesktop, IntPtr _, ref Rect _, IntPtr _) =>
             {
-                SHCore.GetScaleFactorForMonitor(hDesktop, out var scaleFactor)
-                    .ThrowOnFailure();
-                var scale = 1.0 + 1.25 * ((int)scaleFactor / 100.0 - 1.0);
+                var info = new MonitorInfoEx();
+                GetMonitorInfo(hDesktop, info);
+                
+                var settings = new DEVMODE();
+                User32.EnumDisplaySettings(
+                    info.szDevice,
+                    User32.ENUM_CURRENT_SETTINGS,
+                    ref settings);
 
-                left = Math.Min(left, scale * prect.left);
-                right = Math.Max(right, prect.left + scale * (prect.right - prect.left));
-                top = Math.Min(top, scale * prect.top);
-                bottom = Math.Max(bottom, prect.top + scale * (prect.bottom - prect.top));
+                var x = settings.dmPosition.x;
+                var y = settings.dmPosition.y;
+                var width = settings.dmPelsWidth;
+                var height = settings.dmPelsHeight;
+
+                left = Math.Min(left, x);
+                right = Math.Max(right, x + width);
+                top = Math.Min(top, y);
+                bottom = Math.Max(bottom, y + height);
 
                 return true;
             };
-
             EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, callback, 0);
 
             return Rectangle.FromLTRB((int)left, (int)top, (int)right, (int)bottom);
