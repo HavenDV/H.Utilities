@@ -1,9 +1,9 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using PInvoke;
 
 namespace H.Utilities
 {
@@ -38,73 +38,22 @@ namespace H.Utilities
         [DllImport("user32.dll", ExactSpelling = true)]
         internal static extern int ReleaseDC(IntPtr hWnd, IntPtr hDc);
 
-        internal enum SystemMetric
-        {
-            VirtualScreenX = 76, // SM_XVIRTUALSCREEN
-            VirtualScreenY = 77, // SM_YVIRTUALSCREEN
-            VirtualScreenWidth = 78, // CXVIRTUALSCREEN 0x0000004E 
-            VirtualScreenHeight = 79, // CYVIRTUALSCREEN 0x0000004F 
-        }
-
-        [DllImport("user32.dll")]
-        private static extern int GetSystemMetrics(SystemMetric metric);
-
-        [DllImport("gdi32.dll")]
-        internal static extern int GetDeviceCaps(IntPtr hdc, int nIndex);
-
         #endregion
 
         #region DPI
 
-        private static int? _dpi;
-        // ReSharper disable once InconsistentNaming
-        private static readonly object _dpiLock = new();
+        [DllImport("user32")]
+        private static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lpRect, MonitorEnumProc callback, int dwData);
+        
+        private delegate bool MonitorEnumProc(IntPtr hDesktop, IntPtr hdc, ref Rect pRect, int dwData);
 
-        internal static int Dpi {
-            get {
-                if (_dpi.HasValue)
-                {
-                    return _dpi.Value;
-                }
-
-                lock (_dpiLock)
-                {
-                    if (_dpi.HasValue)
-                    {
-                        return _dpi.Value;
-                    }
-
-                    var dc = GetDC(IntPtr.Zero);
-                    if (dc == IntPtr.Zero)
-                    {
-                        throw new Win32Exception(Marshal.GetLastWin32Error());
-                    }
-
-                    try
-                    {
-                        _dpi = GetDeviceCaps(dc, 90);
-
-                        return _dpi.Value;
-                    }
-                    finally
-                    {
-                        ReleaseDC(IntPtr.Zero, dc);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="dpi"></param>
-        /// <param name="pixel"></param>
-        /// <returns></returns>
-        private static double ConvertPixel(int dpi, double pixel)
+        [StructLayout(LayoutKind.Sequential)]
+        private struct Rect
         {
-            return dpi != 0
-                ? pixel * 96.0 / dpi
-                : pixel;
+            public int left;
+            public int top;
+            public int right;
+            public int bottom;
         }
 
         #endregion
@@ -114,16 +63,30 @@ namespace H.Utilities
         /// <summary>
         /// Returns rectangle of VirtualDisplay. X and Y can be negative.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Returns rectangle of VirtualDisplay. X and Y can be negative.</returns>
         public static Rectangle GetVirtualDisplayRectangle()
         {
-            var dpi = Dpi;
-            var x = (int)Math.Round(ConvertPixel(dpi, GetSystemMetrics(SystemMetric.VirtualScreenX)));
-            var y = (int)Math.Round(ConvertPixel(dpi, GetSystemMetrics(SystemMetric.VirtualScreenY)));
-            var width = (int)Math.Round(ConvertPixel(dpi, GetSystemMetrics(SystemMetric.VirtualScreenWidth)));
-            var height = (int)Math.Round(ConvertPixel(dpi, GetSystemMetrics(SystemMetric.VirtualScreenHeight)));
+            var left = 0.0;
+            var right = 0.0;
+            var top = 0.0;
+            var bottom = 0.0;
+            MonitorEnumProc callback = (IntPtr hDesktop, IntPtr hdc, ref Rect prect, int d) =>
+            {
+                SHCore.GetScaleFactorForMonitor(hDesktop, out var scaleFactor)
+                    .ThrowOnFailure();
+                var scale = 1.0 + 1.25 * ((int)scaleFactor / 100.0 - 1.0);
 
-            return new Rectangle(x, y, width, height);
+                left = Math.Min(left, scale * prect.left);
+                right = Math.Max(right, prect.left + scale * (prect.right - prect.left));
+                top = Math.Min(top, scale * prect.top);
+                bottom = Math.Max(bottom, prect.top + scale * (prect.bottom - prect.top));
+
+                return true;
+            };
+
+            EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, callback, 0);
+
+            return Rectangle.FromLTRB((int)left, (int)top, (int)right, (int)bottom);
         }
 
         /// <summary>
@@ -131,7 +94,7 @@ namespace H.Utilities
         /// If <paramref name="rectangle"/> is not null, returns image of this region.
         /// </summary>
         /// <returns></returns>
-        public static Bitmap Shot(Rectangle? rectangle = null)
+        public static Image Shot(Rectangle? rectangle = null)
         {
             var displayRectangle = GetVirtualDisplayRectangle();
 
@@ -177,7 +140,9 @@ namespace H.Utilities
         /// Calls <seealso cref="Task.Run(Action, CancellationToken)"/> for <seealso cref="Shot"/>.
         /// </summary>
         /// <returns></returns>
-        public static async Task<Bitmap> ShotAsync(Rectangle? rectangle = null, CancellationToken cancellationToken = default)
+        public static async Task<Image> ShotAsync(
+            Rectangle? rectangle = null, 
+            CancellationToken cancellationToken = default)
         {
             return await Task.Run(() => Shot(rectangle), cancellationToken)
                 .ConfigureAwait(false);
