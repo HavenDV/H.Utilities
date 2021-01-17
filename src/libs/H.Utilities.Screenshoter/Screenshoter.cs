@@ -79,28 +79,29 @@ namespace H.Utilities
 
         /// <summary>
         /// Creates screenshot of all available screens. <br/>
-        /// If <paramref name="rectangle"/> is not null, returns image of this region.
+        /// If <paramref name="cropRectangle"/> is not null, returns image of this region.
         /// </summary>
+        /// <param name="cropRectangle"></param>
         /// <returns></returns>
-        public static Image Shot(Rectangle? rectangle = null)
+        public static Image Shot(Rectangle? cropRectangle = null)
         {
-            var displayRectangle = GetVirtualDisplayRectangle();
+            var rectangle = cropRectangle ?? GetVirtualDisplayRectangle();
 
             var window = User32.GetDesktopWindow();
             using var dc = User32.GetWindowDC(window);
             using var toDc = Gdi32.CreateCompatibleDC(dc);
-            var hBmp = Gdi32.CreateCompatibleBitmap(dc, displayRectangle.Width, displayRectangle.Height);
+            var hBmp = Gdi32.CreateCompatibleBitmap(dc, rectangle.Width, rectangle.Height);
             var hOldBmp = Gdi32.SelectObject(toDc, hBmp);
 
             // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
             Gdi32.BitBlt(toDc.DangerousGetHandle(), 
                 0, 
-                0, 
-                displayRectangle.Width, 
-                displayRectangle.Height, 
-                dc.DangerousGetHandle(), 
-                displayRectangle.X, 
-                displayRectangle.Y, 
+                0,
+                rectangle.Width,
+                rectangle.Height, 
+                dc.DangerousGetHandle(),
+                rectangle.X,
+                rectangle.Y, 
                 (int)(CopyPixelOperation.CaptureBlt | CopyPixelOperation.SourceCopy));
 
             var bitmap = Image.FromHbitmap(hBmp);
