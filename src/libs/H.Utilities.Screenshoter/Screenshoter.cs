@@ -15,10 +15,18 @@ namespace H.Utilities
     {
         #region PInvokes
 
-        [DllImport("user32", CharSet = CharSet.Auto)]
-        private static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lpRect, MonitorEnumProc callback, int dwData);
+        [DllImport("user32", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern bool EnumDisplayMonitors(
+            IntPtr hdc, 
+            IntPtr lpRect, 
+            MonitorEnumProc callback,
+            IntPtr dwData);
         
-        private delegate bool MonitorEnumProc(IntPtr hDesktop, IntPtr hdc, ref RECT pRect, IntPtr dwData);
+        private delegate bool MonitorEnumProc(
+            IntPtr hDesktop, 
+            IntPtr hdc, 
+            ref RECT pRect, 
+            IntPtr dwData);
 
         [DllImport("user32", CharSet = CharSet.Auto, SetLastError = true)]
         internal static extern bool GetMonitorInfo(
@@ -52,7 +60,7 @@ namespace H.Utilities
             var top = 0;
             var bottom = 0;
 
-            bool Callback(IntPtr hDesktop, IntPtr intPtr, ref RECT rect, IntPtr intPtr1)
+            bool Callback(IntPtr hDesktop, IntPtr hdc, ref RECT rect, IntPtr dwData)
             {
                 var info = new MonitorInfoEx
                 {
@@ -79,7 +87,7 @@ namespace H.Utilities
                 return true;
             }
 
-            EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, Callback, 0);
+            EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, Callback, IntPtr.Zero).Check();
 
             return Rectangle.FromLTRB(left, top, right, bottom);
         }
