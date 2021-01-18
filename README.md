@@ -12,13 +12,17 @@ Description
 [![NuGet](https://img.shields.io/nuget/dt/H.Utilities.svg?style=flat-square&label=H.Utilities)](https://www.nuget.org/packages/H.Utilities/)
 
 ```
-Install-Package H.Utilities
+Install-Package H.Utilities.Screenshoter
 ```
 
-### Usage
+### Screenshoter Usage
 
 ```cs
-// code
+var bitmap = Screenshoter.Shot();
+var bitmap = await Screenshoter.ShotAsync();
+
+// Rectangle in physical screen coordinates(Without DPI).
+var bitmap = Screenshoter.Shot(Rectangle.FromLTRB(-1920, 0, 0, 1080));
 ```
 
 ### Used documentation
