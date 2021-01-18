@@ -15,10 +15,10 @@ namespace H.Utilities.IntegrationTests
         [TestMethod]
         public void ShotTest()
         {
-            var image = Screenshoter.Shot();
+            var bitmap = Screenshoter.Shot();
             var path = $"{Path.GetTempFileName()}.bmp";
 
-            image.Save(path);
+            bitmap.Save(path);
 
             Process.Start(new ProcessStartInfo(path)
             {
@@ -32,10 +32,10 @@ namespace H.Utilities.IntegrationTests
             using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             var cancellationToken = cancellationTokenSource.Token;
 
-            var image = await Screenshoter.ShotAsync(cancellationToken: cancellationToken);
+            var bitmap = await Screenshoter.ShotAsync(cancellationToken: cancellationToken);
             var path = $"{Path.GetTempFileName()}.bmp";
 
-            image.Save(path);
+            bitmap.Save(path);
 
             Process.Start(new ProcessStartInfo(path)
             {
@@ -57,10 +57,10 @@ namespace H.Utilities.IntegrationTests
         [TestMethod]
         public void RectangleShotTest()
         {
-            var image = Screenshoter.Shot(Rectangle.FromLTRB(4509, 808, 5278, 1426));
+            var bitmap = Screenshoter.Shot(Rectangle.FromLTRB(4509, 808, 5278, 1426));
             var path = $"{Path.GetTempFileName()}.bmp";
 
-            image.Save(path);
+            bitmap.Save(path);
 
             Process.Start(new ProcessStartInfo(path)
             {
@@ -71,10 +71,10 @@ namespace H.Utilities.IntegrationTests
         [TestMethod]
         public void InverseRectangleShotTest()
         {
-            var image = Screenshoter.Shot(Rectangle.FromLTRB(5278, 1426, 4509, 808));
+            var bitmap = Screenshoter.Shot(Rectangle.FromLTRB(5278, 1426, 4509, 808));
             var path = $"{Path.GetTempFileName()}.bmp";
 
-            image.Save(path);
+            bitmap.Save(path);
 
             Process.Start(new ProcessStartInfo(path)
             {
