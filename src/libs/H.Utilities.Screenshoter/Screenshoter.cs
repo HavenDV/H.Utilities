@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -57,17 +59,13 @@ namespace H.Utilities
         #region Public methods
 
         /// <summary>
-        /// Returns rectangle of physical display(without considering DPI).
+        /// Returns list of physical display rectangles(without considering DPI).
         /// X and Y can be negative.
         /// </summary>
         /// <returns></returns>
-        public static Rectangle GetPhysicalDisplayRectangle()
+        public static IReadOnlyCollection<Rectangle> GetPhysicalScreens()
         {
-            var left = 0;
-            var right = 0;
-            var top = 0;
-            var bottom = 0;
-
+            var list = new List<Rectangle>();
             bool Callback(nint hDesktop, nint hdc, ref RECT rect, nint dwData)
             {
                 var info = MonitorInfoEx.Create();
@@ -75,8 +73,8 @@ namespace H.Utilities
 
                 var settings = DEVMODE.Create();
                 User32.EnumDisplaySettings(
-                    info.szDevice, 
-                    User32.ENUM_CURRENT_SETTINGS, 
+                    info.szDevice,
+                    User32.ENUM_CURRENT_SETTINGS,
                     ref settings);
 
                 var x = settings.dmPosition.x;
@@ -84,17 +82,24 @@ namespace H.Utilities
                 var width = settings.dmPelsWidth;
                 var height = settings.dmPelsHeight;
 
-                left = Math.Min(left, x);
-                right = Math.Max(right, (int)(x + width));
-                top = Math.Min(top, y);
-                bottom = Math.Max(bottom, (int)(y + height));
+                list.Add(new Rectangle(x, y, (int)width, (int)height));
 
                 return true;
             }
 
             EnumDisplayMonitors(0, 0, Callback, 0).Check();
 
-            return Rectangle.FromLTRB(left, top, right, bottom);
+            return list;
+        }
+
+        /// <summary>
+        /// Returns rectangle of physical display(without considering DPI).
+        /// X and Y can be negative.
+        /// </summary>
+        /// <returns></returns>
+        public static Rectangle GetPhysicalScreenRectangle()
+        {
+            return GetPhysicalScreens().Aggregate(Rectangle.Union);
         }
 
         /// <summary>
@@ -105,7 +110,7 @@ namespace H.Utilities
         /// <returns></returns>
         public static Bitmap Shot(Rectangle? cropRectangle = null)
         {
-            var rectangle = (cropRectangle ?? GetPhysicalDisplayRectangle()).Normalize();
+            var rectangle = (cropRectangle ?? GetPhysicalScreenRectangle()).Normalize();
             
             var window = User32.GetDesktopWindow();
             using var dc = User32.GetWindowDC(window);

@@ -27,6 +27,23 @@ namespace H.Utilities.IntegrationTests
         }
 
         [TestMethod]
+        public void ShotEachDisplayTest()
+        {
+            foreach (var rectangle in Screenshoter.GetPhysicalScreens())
+            {
+                var bitmap = Screenshoter.Shot(rectangle);
+                var path = $"{Path.GetTempFileName()}.bmp";
+
+                bitmap.Save(path);
+
+                Process.Start(new ProcessStartInfo(path)
+                {
+                    UseShellExecute = true,
+                });
+            }
+        }
+
+        [TestMethod]
         public async Task AsyncShotTest()
         {
             using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(30));
