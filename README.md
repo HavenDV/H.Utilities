@@ -9,27 +9,15 @@ Description
 
 ### Nuget
 
-[![NuGet](https://img.shields.io/nuget/dt/H.Utilities.svg?style=flat-square&label=H.Utilities)](https://www.nuget.org/packages/H.Utilities/)
+[![NuGet](https://img.shields.io/nuget/dt/H.Utilities.svg?style=flat-square&label=H.Utilities)](https://www.nuget.org/packages/H.Tests/)
 
 ```
-Install-Package H.Utilities.Screenshoter
+Install-Package H.Tests
 ```
 
-### Screenshoter Usage
+### Usage
 
 ```cs
-var bitmap = Screenshoter.Shot();
-var bitmap = await Screenshoter.ShotAsync();
-
-// Rectangle in physical screen coordinates(Without DPI).
-// The transmitted coordinates will select the first screen of three HD monitors, 
-// where the second is specified as primary.
-var bitmap = Screenshoter.Shot(Rectangle.FromLTRB(-1920, 0, 0, 1080));
-
-// Helper methods
-Screenshoter.GetPhysicalScreens() // returns all screens rectangles.
-Screenshoter.GetPhysicalScreenRectangle() // returns global screen rectangle.
-
 ```
 
 ### Used documentation
