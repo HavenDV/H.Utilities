@@ -39,15 +39,16 @@ namespace H.Utilities
         #region Public methods
 
         /// <summary>
-        /// Returns rectangle of VirtualDisplay. X and Y can be negative.
+        /// Returns rectangle of physical display(without considering DPI).
+        /// X and Y can be negative.
         /// </summary>
-        /// <returns>Returns rectangle of VirtualDisplay. X and Y can be negative.</returns>
-        public static Rectangle GetVirtualDisplayRectangle()
+        /// <returns></returns>
+        public static Rectangle GetPhysicalDisplayRectangle()
         {
-            var left = 0.0;
-            var right = 0.0;
-            var top = 0.0;
-            var bottom = 0.0;
+            var left = 0;
+            var right = 0;
+            var top = 0;
+            var bottom = 0;
 
             bool Callback(IntPtr hDesktop, IntPtr intPtr, ref RECT rect, IntPtr intPtr1)
             {
@@ -66,16 +67,16 @@ namespace H.Utilities
                 var height = settings.dmPelsHeight;
 
                 left = Math.Min(left, x);
-                right = Math.Max(right, x + width);
+                right = Math.Max(right, (int)(x + width));
                 top = Math.Min(top, y);
-                bottom = Math.Max(bottom, y + height);
+                bottom = Math.Max(bottom, (int)(y + height));
 
                 return true;
             }
 
             EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, Callback, 0);
 
-            return Rectangle.FromLTRB((int)left, (int)top, (int)right, (int)bottom);
+            return Rectangle.FromLTRB(left, top, right, bottom);
         }
 
         /// <summary>
@@ -86,7 +87,7 @@ namespace H.Utilities
         /// <returns></returns>
         public static Image Shot(Rectangle? cropRectangle = null)
         {
-            var rectangle = (cropRectangle ?? GetVirtualDisplayRectangle()).Normalize();
+            var rectangle = (cropRectangle ?? GetPhysicalDisplayRectangle()).Normalize();
             
             var window = User32.GetDesktopWindow();
             using var dc = User32.GetWindowDC(window);

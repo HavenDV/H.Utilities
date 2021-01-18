@@ -9,8 +9,9 @@
     <Version>1.0.1</Version>
     <PackageReleaseNotes>Fixed bug with inverse rectangles.</PackageReleaseNotes>
     <Description>Allows you to screenshot a screen or a portion of the screen. Features:
-- Supports multiple displays with different scale.
-- Thread-safe.
+- Supports multiple displays with different scale
+- Thread-safe
+- Contains Screenshoter.GetPhysicalDisplayRectangle method
     </Description>
     <PackageTags>screenshot</PackageTags>
   </PropertyGroup>
