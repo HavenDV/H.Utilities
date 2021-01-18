@@ -98,7 +98,7 @@ namespace H.Utilities
         /// </summary>
         /// <param name="cropRectangle"></param>
         /// <returns></returns>
-        public static Image Shot(Rectangle? cropRectangle = null)
+        public static Bitmap Shot(Rectangle? cropRectangle = null)
         {
             var rectangle = (cropRectangle ?? GetPhysicalDisplayRectangle()).Normalize();
             
@@ -132,7 +132,7 @@ namespace H.Utilities
         /// Calls <seealso cref="Task.Run(Action, CancellationToken)"/> for <seealso cref="Shot"/>.
         /// </summary>
         /// <returns></returns>
-        public static async Task<Image> ShotAsync(
+        public static async Task<Bitmap> ShotAsync(
             Rectangle? rectangle = null, 
             CancellationToken cancellationToken = default)
         {
