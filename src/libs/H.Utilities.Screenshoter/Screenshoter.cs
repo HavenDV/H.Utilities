@@ -30,18 +30,26 @@ namespace H.Utilities
 
         [DllImport("user32", CharSet = CharSet.Auto, SetLastError = true)]
         internal static extern bool GetMonitorInfo(
-            nint hmonitor, 
+            nint hMonitor, 
             ref MonitorInfoEx info);
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto, Pack = 4)]
         internal struct MonitorInfoEx
         {
-            public uint cbSize;// = (uint)Marshal.SizeOf(typeof(MonitorInfoEx));
+            public uint cbSize;
             public RECT rcMonitor;
             public RECT rcWork;
             public uint dwFlags;
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 32)]
-            public char[] szDevice;// = new char[32];
+            public char[] szDevice;
+
+            public static MonitorInfoEx Create()
+            {
+                return new()
+                {
+                    cbSize = (uint) Marshal.SizeOf(typeof(MonitorInfoEx)),
+                };
+            }
         }
 
         #endregion
@@ -62,13 +70,10 @@ namespace H.Utilities
 
             bool Callback(nint hDesktop, nint hdc, ref RECT rect, nint dwData)
             {
-                var info = new MonitorInfoEx
-                {
-                    cbSize = (uint)Marshal.SizeOf(typeof(MonitorInfoEx)),
-                };
+                var info = MonitorInfoEx.Create();
                 GetMonitorInfo(hDesktop, ref info).Check();
 
-                var settings = new DEVMODE();
+                var settings = DEVMODE.Create();
                 User32.EnumDisplaySettings(
                     info.szDevice, 
                     User32.ENUM_CURRENT_SETTINGS, 
