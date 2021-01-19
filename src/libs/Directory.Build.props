@@ -4,6 +4,7 @@
 
   <PropertyGroup Label="Common">
     <InvariantGlobalization>true</InvariantGlobalization>
+    <Deterministic>true</Deterministic>
   </PropertyGroup>
 
   <PropertyGroup Label="Signing">
