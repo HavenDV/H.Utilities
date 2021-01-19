@@ -22,20 +22,17 @@ namespace H.Tests
         public static async Task<TestWpfApp> CreateAsync(
             CancellationToken cancellationToken = default)
         {
-            if (Application.Current != null)
-            {
-                return new TestWpfApp(Application.Current);
-            }
-
+            var application = (Application?)null;
             var exception = (Exception?)null;
             var thread = new Thread(() =>
             {
                 try
                 {
-                    new Application()
+                    application = new Application()
                     {
                         ShutdownMode = ShutdownMode.OnExplicitShutdown,
-                    }.Run();
+                    };
+                    application.Run();
                 }
                 catch (Exception e)
                 {
@@ -45,7 +42,7 @@ namespace H.Tests
             thread.SetApartmentState(ApartmentState.STA);
             thread.Start();
 
-            while (Application.Current == null && exception == null)
+            while (application == null && exception == null)
             {
                 await Task.Delay(TimeSpan.FromMilliseconds(1), cancellationToken)
                     .ConfigureAwait(false);
@@ -56,12 +53,12 @@ namespace H.Tests
                 throw exception;
             }
 
-            if (Application.Current == null)
+            if (application == null)
             {
-                throw new InvalidOperationException("Application.Current is null.");
+                throw new InvalidOperationException("application is null.");
             }
 
-            return new TestWpfApp(Application.Current);
+            return new TestWpfApp(application);
         }
 
         #endregion
