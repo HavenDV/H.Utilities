@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -27,6 +27,7 @@ namespace H.Tests
                 return new TestWpfApp(Application.Current);
             }
 
+            var exception = (Exception?)null;
             var thread = new Thread(() =>
             {
                 try
@@ -36,18 +37,28 @@ namespace H.Tests
                         ShutdownMode = ShutdownMode.OnExplicitShutdown,
                     }.Run();
                 }
-                catch (Exception exception)
+                catch (Exception e)
                 {
-                    Trace.WriteLine($"{nameof(TestWpfApp)}: {exception}");
+                    exception = e;
                 }
             });
             thread.SetApartmentState(ApartmentState.STA);
             thread.Start();
 
-            while (Application.Current == null)
+            while (Application.Current == null && exception == null)
             {
                 await Task.Delay(TimeSpan.FromMilliseconds(1), cancellationToken)
                     .ConfigureAwait(false);
+            }
+
+            if (exception != null)
+            {
+                throw exception;
+            }
+
+            if (Application.Current == null)
+            {
+                throw new InvalidOperationException("Application.Current is null.");
             }
 
             return new TestWpfApp(Application.Current);
@@ -91,6 +102,11 @@ namespace H.Tests
         public void Dispose()
         {
             Dispatcher.InvokeShutdown();
+
+            var field = typeof(Application).GetField(
+                "_appCreatedInThisAppDomain",
+                BindingFlags.Static | BindingFlags.NonPublic);
+            field?.SetValue(null, false);
         }
 
         #endregion
