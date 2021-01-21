@@ -10,17 +10,19 @@ namespace H.Tests.Extensions
         private class Consumer
         {
             #region Properties
-            
-            private string Name { get; }
+
+            private string ObjectName { get; }
+            private string EventName { get; }
             private Action<string> Action { get; }
 
             #endregion
 
             #region Constructors
 
-            public Consumer(string name, Action<string> action)
+            public Consumer(string objectName, string eventName, Action<string> action)
             {
-                Name = name;
+                ObjectName = objectName;
+                EventName = eventName;
                 Action = action;
             }
 
@@ -31,7 +33,10 @@ namespace H.Tests.Extensions
             // ReSharper disable once UnusedParameter.Local
             public void HandleEvent(object _, object args)
             {
-                Action($"{Name}: {args}");
+                var objectName = string.IsNullOrWhiteSpace(ObjectName)
+                    ? string.Empty
+                    : $"{ObjectName}.";
+                Action($"{objectName}{EventName}: {args}");
             }
 
             #endregion
@@ -41,9 +46,11 @@ namespace H.Tests.Extensions
         /// 
         /// </summary>
         /// <param name="obj"></param>
+        /// <param name="name">Default: Name of type.</param>
         /// <param name="action"></param>
         public static T WithEventLogging<T>(
             this T obj, 
+            string? name = null,
             Action<string>? action = null)
             where T : notnull
         {
@@ -52,7 +59,10 @@ namespace H.Tests.Extensions
 
             foreach (var eventInfo in typeof(T).GetEvents())
             {
-                var consumer = new Consumer(eventInfo.Name, action);
+                var consumer = new Consumer(
+                    name ?? typeof(T).Name, 
+                    eventInfo.Name, 
+                    action);
                 var method = consumer.GetType().GetMethod(nameof(Consumer.HandleEvent)) ?? 
                              throw new InvalidOperationException("HandleEvent method is not found");
                 var handlerType = eventInfo.EventHandlerType ?? 
