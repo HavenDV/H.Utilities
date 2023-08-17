@@ -33,6 +33,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "H.Tests.UnitTests", "src\te
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "H.Tests.WPF", "src\libs\H.Tests.WPF\H.Tests.WPF.csproj", "{557B3108-4089-4C57-985D-4745EB706226}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "H.Utilities.TaskWorker", "src\libs\H.Utilities.TaskWorker\H.Utilities.TaskWorker.csproj", "{818366B5-444A-4CA2-8A3D-1C4F5C5C29CD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{557B3108-4089-4C57-985D-4745EB706226}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{557B3108-4089-4C57-985D-4745EB706226}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{557B3108-4089-4C57-985D-4745EB706226}.Release|Any CPU.Build.0 = Release|Any CPU
+		{818366B5-444A-4CA2-8A3D-1C4F5C5C29CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{818366B5-444A-4CA2-8A3D-1C4F5C5C29CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{818366B5-444A-4CA2-8A3D-1C4F5C5C29CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{818366B5-444A-4CA2-8A3D-1C4F5C5C29CD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -74,6 +80,7 @@ Global
 		{2AB4A34F-7B86-49D7-8B15-C63915CFAC3A} = {6E5BF389-3D3F-4D74-9DD0-3B199CB529C5}
 		{6F4C32E2-4F56-4EAE-ADE7-4212CFA27C51} = {9CAA231D-7BE1-46C9-ACD6-EB2E569CEBEA}
 		{557B3108-4089-4C57-985D-4745EB706226} = {6E5BF389-3D3F-4D74-9DD0-3B199CB529C5}
+		{818366B5-444A-4CA2-8A3D-1C4F5C5C29CD} = {6E5BF389-3D3F-4D74-9DD0-3B199CB529C5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1493AEE4-9211-46E9-BFE6-8F629EAC5693}
