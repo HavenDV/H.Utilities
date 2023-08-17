@@ -5,7 +5,6 @@
   </PropertyGroup>
 
   <PropertyGroup Label="NuGet">
-    <Version>1.0.1</Version>
     <PackageReleaseNotes>
 feat: Added WithEventLogging name parameter.
     </PackageReleaseNotes>
