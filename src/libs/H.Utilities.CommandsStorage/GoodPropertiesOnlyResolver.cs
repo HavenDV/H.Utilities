@@ -4,15 +4,14 @@ using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace H.Utilities
-{
-    public class GoodPropertiesOnlyResolver : DefaultContractResolver
-    {
-        protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
-        {
-            var properties = base.CreateProperties(type, memberSerialization);
+namespace H.Utilities;
 
-            return properties.Where(p => p.Writable && !typeof(Delegate).IsAssignableFrom(p.PropertyType)).ToList();
-        }
+public class GoodPropertiesOnlyResolver : DefaultContractResolver
+{
+    protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
+    {
+        var properties = base.CreateProperties(type, memberSerialization);
+
+        return properties.Where(p => p.Writable && !typeof(Delegate).IsAssignableFrom(p.PropertyType)).ToList();
     }
 }

@@ -1,9 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
 
   <PropertyGroup>
-    <TargetFrameworks>net4.5;netcoreapp3.1;net5.0-windows</TargetFrameworks>
+    <TargetFrameworks>net4.8;net6.0-windows</TargetFrameworks>
     <RootNamespace>H.Tests</RootNamespace>
     <UseWPF>true</UseWPF>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
 
   <PropertyGroup Label="NuGet">

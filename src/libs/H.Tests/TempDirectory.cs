@@ -1,91 +1,90 @@
 ﻿using System;
 using System.IO;
 
-namespace H.Tests
+namespace H.Tests;
+
+/// <summary>
+/// 
+/// </summary>
+public sealed class TempDirectory : IDisposable
 {
+    #region Properties
+
     /// <summary>
     /// 
     /// </summary>
-    public sealed class TempDirectory : IDisposable
-    {
-        #region Properties
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public string Folder { get; }
+    public string Folder { get; }
         
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool DeleteOnDispose { get; }
+    /// <summary>
+    /// 
+    /// </summary>
+    public bool DeleteOnDispose { get; }
 
-        #endregion
+    #endregion
 
-        #region Constructors
+    #region Constructors
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="deleteOnDispose"></param>
-        public TempDirectory(bool deleteOnDispose = true)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="deleteOnDispose"></param>
+    public TempDirectory(bool deleteOnDispose = true)
+    {
+        DeleteOnDispose = deleteOnDispose;
+            
+        Folder = Path.Combine(Path.GetTempPath(), "H.Temp", $"{new Random().Next()}");
+            
+        Directory.CreateDirectory(Folder);
+    }
+
+    #endregion
+
+    #region Methods
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public void Clear()
+    {
+        if (!Directory.Exists(Folder))
         {
-            DeleteOnDispose = deleteOnDispose;
-            
-            Folder = Path.Combine(Path.GetTempPath(), "H.Temp", $"{new Random().Next()}");
-            
-            Directory.CreateDirectory(Folder);
+            return;
         }
-
-        #endregion
-
-        #region Methods
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public void Clear()
-        {
-            if (!Directory.Exists(Folder))
-            {
-                return;
-            }
             
-            foreach (var path in Directory.EnumerateFiles(Folder, "*.*", SearchOption.AllDirectories))
-            {
-                try
-                {
-                    File.Delete(path);
-                }
-                catch (UnauthorizedAccessException)
-                {
-                    // ignored.
-                }
-            }
-
+        foreach (var path in Directory.EnumerateFiles(Folder, "*.*", SearchOption.AllDirectories))
+        {
             try
             {
-                Directory.Delete(Folder, true);
+                File.Delete(path);
             }
             catch (UnauthorizedAccessException)
             {
                 // ignored.
             }
         }
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        public void Dispose()
-        {
-            if (!DeleteOnDispose)
-            {
-                return;
-            }
 
-            Clear();
+        try
+        {
+            Directory.Delete(Folder, true);
         }
-        
-        #endregion
+        catch (UnauthorizedAccessException)
+        {
+            // ignored.
+        }
     }
+        
+    /// <summary>
+    /// 
+    /// </summary>
+    public void Dispose()
+    {
+        if (!DeleteOnDispose)
+        {
+            return;
+        }
+
+        Clear();
+    }
+        
+    #endregion
 }

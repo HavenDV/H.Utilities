@@ -1,33 +1,32 @@
-﻿namespace H.Utilities
+﻿namespace H.Utilities;
+
+public class TextObject
 {
-    public class TextObject
+    #region Properties
+
+    public string Text { get; set; } = string.Empty;
+
+    #endregion
+
+    #region Constructors
+
+    public TextObject()
     {
-        #region Properties
-
-        public string Text { get; set; } = string.Empty;
-
-        #endregion
-
-        #region Constructors
-
-        public TextObject()
-        {
-        }
-
-        public TextObject(string text)
-        {
-            Text = text;
-        }
-
-        #endregion
-
-        #region ToString
-
-        public override string ToString()
-        {
-            return Text;
-        }
-
-        #endregion
     }
+
+    public TextObject(string text)
+    {
+        Text = text;
+    }
+
+    #endregion
+
+    #region ToString
+
+    public override string ToString()
+    {
+        return Text;
+    }
+
+    #endregion
 }

@@ -1,19 +1,18 @@
 ﻿using System;
 
-namespace H.Utilities
+namespace H.Utilities;
+
+/// <summary>
+/// 
+/// </summary>
+public class AppDataFolder : SpecialFolder
 {
     /// <summary>
     /// 
     /// </summary>
-    public class AppDataFolder : SpecialFolder
+    /// <param name="needToCombinedPathStrings"></param>
+    public AppDataFolder(params string[] needToCombinedPathStrings) :
+        base(Environment.SpecialFolder.ApplicationData, needToCombinedPathStrings)
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="needToCombinedPathStrings"></param>
-        public AppDataFolder(params string[] needToCombinedPathStrings) :
-            base(Environment.SpecialFolder.ApplicationData, needToCombinedPathStrings)
-        {
-        }
     }
 }

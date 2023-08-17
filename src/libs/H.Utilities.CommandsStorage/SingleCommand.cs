@@ -1,23 +1,22 @@
-﻿namespace H.Utilities
+﻿namespace H.Utilities;
+
+public class SingleCommand : TextObject
 {
-    public class SingleCommand : TextObject
+    #region Constructors
+
+    public SingleCommand()
     {
-        #region Constructors
-
-        public SingleCommand()
-        {
-        }
-
-        public SingleCommand(string text) : base(text)
-        {
-        }
-
-        #endregion
-
-        #region ICloneable
-
-        public object Clone() => new SingleCommand(Text);
-
-        #endregion
     }
+
+    public SingleCommand(string text) : base(text)
+    {
+    }
+
+    #endregion
+
+    #region ICloneable
+
+    public object Clone() => new SingleCommand(Text);
+
+    #endregion
 }

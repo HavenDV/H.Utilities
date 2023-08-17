@@ -5,107 +5,106 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 
-namespace H.Tests
+namespace H.Tests;
+
+/// <summary>
+/// 
+/// </summary>
+public sealed class TestWpfApp : IDisposable
 {
+    #region Static methods
+
     /// <summary>
     /// 
     /// </summary>
-    public sealed class TestWpfApp : IDisposable
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    public static async Task<TestWpfApp> CreateAsync(
+        CancellationToken cancellationToken = default)
     {
-        #region Static methods
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public static async Task<TestWpfApp> CreateAsync(
-            CancellationToken cancellationToken = default)
+        var application = (Application?)null;
+        var exception = (Exception?)null;
+        var thread = new Thread(() =>
         {
-            var application = (Application?)null;
-            var exception = (Exception?)null;
-            var thread = new Thread(() =>
+            try
             {
-                try
+                application = new Application()
                 {
-                    application = new Application()
-                    {
-                        ShutdownMode = ShutdownMode.OnExplicitShutdown,
-                    };
-                    application.Run();
-                }
-                catch (Exception e)
-                {
-                    exception = e;
-                }
-            });
-            thread.SetApartmentState(ApartmentState.STA);
-            thread.Start();
-
-            while (application == null && exception == null)
-            {
-                await Task.Delay(TimeSpan.FromMilliseconds(1), cancellationToken)
-                    .ConfigureAwait(false);
+                    ShutdownMode = ShutdownMode.OnExplicitShutdown,
+                };
+                application.Run();
             }
-
-            if (exception != null)
+            catch (Exception e)
             {
-                throw exception;
+                exception = e;
             }
+        });
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
 
-            if (application == null)
-            {
-                throw new InvalidOperationException("application is null.");
-            }
-
-            return new TestWpfApp(application);
-        }
-
-        #endregion
-
-        #region Properties
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public Application Application { get; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public Dispatcher Dispatcher => Application.Dispatcher;
-
-        #endregion
-
-        #region Constructors
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="application"></param>
-        /// <exception cref="ArgumentNullException"></exception>
-        public TestWpfApp(Application application)
+        while (application == null && exception == null)
         {
-            Application = application ?? throw new ArgumentNullException(nameof(application));
+            await Task.Delay(TimeSpan.FromMilliseconds(1), cancellationToken)
+                .ConfigureAwait(false);
         }
 
-        #endregion
-
-        #region Public methods
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public void Dispose()
+        if (exception != null)
         {
-            Dispatcher.InvokeShutdown();
-
-            var field = typeof(Application).GetField(
-                "_appCreatedInThisAppDomain",
-                BindingFlags.Static | BindingFlags.NonPublic);
-            field?.SetValue(null, false);
+            throw exception;
         }
 
-        #endregion
+        if (application == null)
+        {
+            throw new InvalidOperationException("application is null.");
+        }
+
+        return new TestWpfApp(application);
     }
+
+    #endregion
+
+    #region Properties
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public Application Application { get; }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public Dispatcher Dispatcher => Application.Dispatcher;
+
+    #endregion
+
+    #region Constructors
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="application"></param>
+    /// <exception cref="ArgumentNullException"></exception>
+    public TestWpfApp(Application application)
+    {
+        Application = application ?? throw new ArgumentNullException(nameof(application));
+    }
+
+    #endregion
+
+    #region Public methods
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public void Dispose()
+    {
+        Dispatcher.InvokeShutdown();
+
+        var field = typeof(Application).GetField(
+            "_appCreatedInThisAppDomain",
+            BindingFlags.Static | BindingFlags.NonPublic);
+        field?.SetValue(null, false);
+    }
+
+    #endregion
 }
